@@ -1,0 +1,17 @@
+* {
+  padding: 0;
+  margin: 0;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.controls label {
+  display: block;
+}
+
+.car-wrapper {
+  position: relative;
+  margin: 10px 40px;
+  padding: 0 0px;
+  border-bottom: 3px dashed #000000;
+}

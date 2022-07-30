@@ -3,7 +3,10 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "noImplicitAny": true,
-    "target": "es6"
+    "target": "es6",
+    "esModuleInterop": true,
+    "moduleResolution": "node"
   },
-  "files": ["src/index.ts"]
+  "files": ["src/index.ts"],
+  "exclude": ["node_modules", "webpack.config.js"]
 }
