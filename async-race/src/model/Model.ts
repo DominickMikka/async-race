@@ -38,19 +38,24 @@ class Model {
     return await car.json();
   }
 
+  async removeCar(carId: string) {
+    const car = await fetch(`${this.serverUrl}/garage/${carId}`, { method: 'DELETE' });
+    return await car.json();
+  }
+
   async start(carId: string) {
-    const response = await fetch(`${this.serverUrl}/engine?id=${carId}&status=started`, {method: 'PATCH'});
+    const response = await fetch(`${this.serverUrl}/engine?id=${carId}&status=started`, { method: 'PATCH' });
     const { velocity, distance } = await response.json();
     return { velocity, distance };
   }
 
   async stop(carId: string) {
-    const response = await fetch(`${this.serverUrl}/engine?id=${carId}&status=stopped`, {method: 'PATCH'});
+    const response = await fetch(`${this.serverUrl}/engine?id=${carId}&status=stopped`, { method: 'PATCH' });
     return response.json();
   }
 
   async drive(carId: string) {
-    const status = await fetch(`${this.serverUrl}/engine?id=${carId}&status=drive`, {method: 'PATCH'});
+    const status = await fetch(`${this.serverUrl}/engine?id=${carId}&status=drive`, { method: 'PATCH' });
     try {
       return await status.json();
     } catch(e) {

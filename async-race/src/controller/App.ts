@@ -37,11 +37,18 @@ class App {
           (document.getElementById('car-update-color') as HTMLInputElement).value = car.color;
         };
 
+        if (eventId.startsWith('remove')) {
+          const carId = eventId.slice(7);
+          await this.model.removeCar(carId);
+          const element = document.getElementById(`wrapper-${carId}`);
+          element?.remove();
+        };
+
+
         if (eventId.startsWith('update')) {
           const car = await this.model.updateCar(this.selectedCarId, (document.getElementById('car-update-name') as HTMLInputElement).value, (document.getElementById('car-update-color') as HTMLInputElement).value);
           (document.getElementById(`car-${this.selectedCarId}`) as HTMLElement).setAttribute('fill', (document.getElementById('car-update-color') as HTMLInputElement).value);
           (document.getElementById(`car-name-${this.selectedCarId}`) as HTMLElement).innerHTML = (document.getElementById('car-update-name') as HTMLInputElement).value;
-          console.log(car);
         };
 
         if (eventId.startsWith('start')) {
