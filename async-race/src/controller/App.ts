@@ -6,35 +6,106 @@ class App {
   view: Garage;
   model: Model;
   root: HTMLElement;
+  selectedCarId: string;
+  selectedCarName: string;
+  selectedCarColor: string;
   
   constructor(root: HTMLElement) {
     this.view = new Garage();
     this.model = new Model('http://127.0.0.1:3000');
     this.root = root;
+    this.selectedCarId = '';
+    this.selectedCarName = '';
+    this.selectedCarColor = '';
   }
 
   async start() {
     const cars = await this.model.getCars();
-    this.root.append(this.view.createGarage(cars));
-    const startButtons = document.querySelectorAll('.button-start');
+    this.view.createGarage(this.root, cars);
 
-    startButtons.forEach(e => {
-      e.addEventListener('click', async (e) => {
-        const carId = (e.target as HTMLElement).id.slice(6);
-        const start = await this.model.start(carId);
-        console.log(start);
-        const drive = await this.model.drive(carId);
+    document.addEventListener('click', async (event) => {
+      if (event.target instanceof HTMLElement) {
+        const eventId = event.target.id;
 
-        if (drive.success) {
-          console.log(drive.success + ' SUCESS');
+        if (eventId.startsWith('select')) {
+          const carId = eventId.slice(7);
+          const car = await this.model.getCar(carId);
+          this.selectedCarId = carId;
+          this.selectedCarName = car.name;
+          this.selectedCarColor = car.color;
+          (document.getElementById('car-update-name') as HTMLInputElement).value = car.name;
+          (document.getElementById('car-update-color') as HTMLInputElement).value = car.color;
+        };
+
+        if (eventId.startsWith('update')) {
+          const car = await this.model.updateCar(this.selectedCarId, (document.getElementById('car-update-name') as HTMLInputElement).value, (document.getElementById('car-update-color') as HTMLInputElement).value);
+          (document.getElementById(`car-${this.selectedCarId}`) as HTMLElement).setAttribute('fill', (document.getElementById('car-update-color') as HTMLInputElement).value);
+          (document.getElementById(`car-name-${this.selectedCarId}`) as HTMLElement).innerHTML = (document.getElementById('car-update-name') as HTMLInputElement).value;
+          console.log(car);
+        };
+
+        if (eventId.startsWith('start')) {
+          const carId = eventId.slice(6);
+          this.singleCarRace(carId);
+        };
+
+        if (eventId.startsWith('stop')) {
+          const carId = eventId.slice(5);
+          this.singleCarRace(carId, true);
+        };
+
+        if (eventId.startsWith('create-car')) {
+          const carName = (document.getElementById('new-car-name') as HTMLInputElement).value;
+          const carColor = (document.getElementById('new-car-color') as HTMLInputElement).value;
+          const car: ICar = await this.model.addCar(carName, carColor);
+          this.root.insertAdjacentHTML('beforeend', this.view.createCarElement(car));
+        };
+      };
+    });
+  }
+
+  async singleCarRace(e: string, stoped?: boolean) {
+    const carId = e;
+    //(e.target as HTMLButtonElement).disabled = true;
+    const car = document.querySelector(`#car-${carId}`) as HTMLElement;
+    const flag = document.querySelector(`#finish-${carId}`) as HTMLElement;
+    let start: { distance: number; velocity: number; };
+
+    let animationId = 0;
+
+    start = await this.model.start(carId);
+
+    let begin: number;
+    const finish: number = (flag as HTMLElement).getBoundingClientRect().x;
+    const step: number = (flag as HTMLElement).getBoundingClientRect().x / start.distance;
+    let done = false;
+      
+    const animation = () => {
+  
+        if (!begin) {
+          begin = 0;
+        }
+  
+        if (begin < finish) {
+          begin = Math.ceil(begin + (step * start.velocity)) + 2;
+          car.style.transform = `translateX(${begin}px)`;
         } else {
-          console.log(drive.success + ' FALSE');
+          done = true;
+        }
+  
+        if (!done) {
+          animationId = requestAnimationFrame(animation);
         }
         
-      });
-    });
+      }
+      animationId = requestAnimationFrame(animation);
 
-    console.log(startButtons);
+      const drive = await this.model.drive(carId);
+
+      if (!drive) {
+        cancelAnimationFrame(animationId);
+        //(e.target as HTMLButtonElement).disabled = false;
+      }
   }
 }
 

@@ -3,15 +3,51 @@
   margin: 0;
   outline: none;
   box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.top-menu {
+  margin: 10px 40px;
+}
+
+.controls {
+  margin: 10px 40px;
+}
+
+.garage-label {
+  margin: 10px 40px;
+}
+
+.page-label {
+  margin: 10px 40px;
 }
 
 .controls label {
   display: block;
+  margin: 10px 0;
 }
 
 .car-wrapper {
   position: relative;
-  margin: 10px 40px;
+  margin: 25px 40px;
   padding: 0 0px;
   border-bottom: 3px dashed #000000;
+}
+
+.car-name {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+button {
+  background: none;
+  border: 1px solid #000000;
+  padding: 5px;
+}
+
+input {
+  height: 27px;
+  vertical-align: top;
+  text-indent: 10px;
+  border: 1px solid #000000;
 }
