@@ -44,11 +44,16 @@ class App {
           element?.remove();
         };
 
-
         if (eventId.startsWith('update')) {
           const car = await this.model.updateCar(this.selectedCarId, (document.getElementById('car-update-name') as HTMLInputElement).value, (document.getElementById('car-update-color') as HTMLInputElement).value);
           (document.getElementById(`car-${this.selectedCarId}`) as HTMLElement).setAttribute('fill', (document.getElementById('car-update-color') as HTMLInputElement).value);
           (document.getElementById(`car-name-${this.selectedCarId}`) as HTMLElement).innerHTML = (document.getElementById('car-update-name') as HTMLInputElement).value;
+        };
+
+        if (eventId.startsWith('start-race')) {
+          const buttonsStart = document.querySelectorAll('.button-start');
+          console.log(buttonsStart);
+          buttonsStart.forEach(e => (e as HTMLElement).click());
         };
 
         if (eventId.startsWith('start')) {
