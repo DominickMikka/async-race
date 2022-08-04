@@ -8,9 +8,10 @@ class Garage {
     this.carsWrapper.classList.add('cars');
   }
 
-  createGarage(root: HTMLElement, cars: ICar[], count: number): void {
+  createGarage(root: HTMLElement, cars: ICar[]): void {
     cars.forEach((car: ICar) => {
-      this.carsWrapper.insertAdjacentHTML('beforeend', this.createCarElement(car));
+      //this.carsWrapper.insertAdjacentHTML('beforeend', this.createCarElement(car));
+      this.createCarElement(car);
     });
 
     root.insertAdjacentHTML('afterbegin', this.createMenu() + 
@@ -52,7 +53,7 @@ class Garage {
   createPageLabel(page: number) {
     return `
       <div class='page-label'>
-        Current page is: <strong>${page}</strong>
+        Current page is: <strong id='page-number'>${page}</strong>
       </div>
     `;
   }
@@ -63,18 +64,19 @@ class Garage {
         <button id='prev-page' disabled>Prev page</button>
         <button id='next-page'>Next page</button>
       </div>
-      `
+      `;
   }
 
   updateCars(cars: ICar[]) {
     this.carsWrapper.innerHTML = '';
     cars.forEach((car: ICar) => {
-      this.carsWrapper.insertAdjacentHTML('beforeend', this.createCarElement(car));
+      this.createCarElement(car);
     });
   }
 
-  createCarElement(car: ICar) {
-    return `
+  createCarElement(car: ICar, carsWrapper: HTMLElement = this.carsWrapper) {
+    
+    const carTemplate = `
       <div class='car-wrapper' id='wrapper-${car.id}'>
         <button class='button-select' id='select-${car.id}'>Select</button> 
         <button class='button-remove' id='remove-${car.id}'>Remove</button>
@@ -87,6 +89,7 @@ class Garage {
         <svg id="finish-${car.id}" width="50px" style="position: absolute; right: 78px; bottom: -5px;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 32 32" xml:space="preserve"> <polyline style="fill:none;stroke:#000000;stroke-width:2;stroke-miterlimit:10;" points="6,28 6,5 26,5 26,19 6,19 "/> <rect x="22" y="5" width="4" height="4"/> <rect x="19" y="15" width="3" height="4"/> <rect x="19" y="9" width="3" height="3"/> <rect x="13" y="15" width="3" height="4"/> <rect x="13" y="9" width="3" height="3"/> <rect x="6" y="15" width="4" height="4"/> <rect x="6" y="9" width="4" height="3"/> <rect x="22" y="12" width="4" height="3"/> <rect x="16" y="12" width="3" height="3"/> <rect x="10" y="12" width="3" height="3"/> <rect x="16" y="5" width="3" height="4"/> <rect x="10" y="5" width="3" height="4"/></svg>
       </div>
     `;
+    carsWrapper.insertAdjacentHTML('beforeend', carTemplate);
   }
 }
 
