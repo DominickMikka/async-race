@@ -9,6 +9,8 @@ class App {
   selectedCarId: string;
   selectedCarName: string;
   selectedCarColor: string;
+  animationId: number;
+  currentPage: number;
   
   constructor(root: HTMLElement) {
     this.view = new Garage();
@@ -17,11 +19,19 @@ class App {
     this.selectedCarId = '';
     this.selectedCarName = '';
     this.selectedCarColor = '';
+    this.animationId = 0;
+    this.currentPage = 1;
   }
 
   async start() {
-    const cars = await this.model.getCars();
-    this.view.createGarage(this.root, cars);
+    const cars = await this.model.getCars(this.currentPage);
+    const allCars = await cars.cars;
+    let countCars = 0;
+    if (cars.carsCount) {
+      countCars = +cars.carsCount;
+    }
+    
+    this.view.createGarage(this.root, allCars, countCars);
 
     document.addEventListener('click', async (event) => {
       if (event.target instanceof HTMLElement) {
@@ -50,9 +60,8 @@ class App {
           (document.getElementById(`car-name-${this.selectedCarId}`) as HTMLElement).innerHTML = (document.getElementById('car-update-name') as HTMLInputElement).value;
         };
 
-        if (eventId.startsWith('start-race')) {
+        if (eventId.startsWith('go-race')) {
           const buttonsStart = document.querySelectorAll('.button-start');
-          console.log(buttonsStart);
           buttonsStart.forEach(e => (e as HTMLElement).click());
         };
 
@@ -63,7 +72,7 @@ class App {
 
         if (eventId.startsWith('stop')) {
           const carId = eventId.slice(5);
-          this.singleCarRace(carId, true);
+          this.stopRace(carId, this.animationId);
         };
 
         if (eventId.startsWith('create-car')) {
@@ -72,19 +81,41 @@ class App {
           const car: ICar = await this.model.addCar(carName, carColor);
           this.root.insertAdjacentHTML('beforeend', this.view.createCarElement(car));
         };
+
+        if (eventId === 'next-page') {
+          this.currentPage++;
+          const cars = await this.model.getCars(this.currentPage);
+          const allCars = await cars.cars;
+          let countCars = 0;
+
+          if (cars.carsCount) {
+            countCars = +cars.carsCount;
+          };
+
+          if (this.currentPage === 1) {
+            (document.getElementById('prev-page') as HTMLButtonElement).disabled = true;
+            (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
+          } else {
+            (document.getElementById('prev-page') as HTMLButtonElement).disabled = false;
+            (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
+          };
+
+          this.view.updateCars(cars.cars);
+        }
       };
     });
-  }
+  };
 
-  async singleCarRace(e: string, stoped?: boolean) {
+  async singleCarRace(e: string) {
     const carId = e;
-    //(e.target as HTMLButtonElement).disabled = true;
+    (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = true;
+    (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = false;
+    let start: { distance: number; velocity: number; };
+    let animationId: number;
+
     const car = document.querySelector(`#car-${carId}`) as HTMLElement;
     const flag = document.querySelector(`#finish-${carId}`) as HTMLElement;
-    let start: { distance: number; velocity: number; };
-
-    let animationId = 0;
-
+    
     start = await this.model.start(carId);
 
     let begin: number;
@@ -92,7 +123,7 @@ class App {
     const step: number = (flag as HTMLElement).getBoundingClientRect().x / start.distance;
     let done = false;
       
-    const animation = () => {
+    const animation = async () => {
   
         if (!begin) {
           begin = 0;
@@ -103,12 +134,15 @@ class App {
           car.style.transform = `translateX(${begin}px)`;
         } else {
           done = true;
+          (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = false;
+          (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = true;
         }
-  
+
         if (!done) {
           animationId = requestAnimationFrame(animation);
+          this.animationId = animationId;
         }
-        
+
       }
       animationId = requestAnimationFrame(animation);
 
@@ -116,8 +150,16 @@ class App {
 
       if (!drive) {
         cancelAnimationFrame(animationId);
-        //(e.target as HTMLButtonElement).disabled = false;
+        (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = false;
+        (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = true;
       }
+  }
+
+  async stopRace(carId: string, animationId: number) {
+    (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = false;
+    (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = true;
+    cancelAnimationFrame(animationId);
+    const stop = await this.model.stop(carId);
   }
 }
 

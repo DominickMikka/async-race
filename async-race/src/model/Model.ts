@@ -6,9 +6,12 @@ class Model {
     this.serverUrl = serverUrl;
   }
 
-  async getCars() {
-    const cars = await fetch(`${this.serverUrl}/garage?_page=1&_limit=7`);
-    return await cars.json();
+  async getCars(page: number) {
+    const cars = await fetch(`${this.serverUrl}/garage?_page=${page}&_limit=7`);
+    return { 
+      cars: await cars.json(), 
+      carsCount: cars.headers.get('X-Total-Count'),
+    };
   }
 
   async addCar(name: string, color: string) {
