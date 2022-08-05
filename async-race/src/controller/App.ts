@@ -14,9 +14,11 @@ class App {
   countCars: number;
   countPages: number;
   carsOnPage: number;
+  randomCarsNames: string[];
+  randomCarsModels: string[];
   
   constructor(root: HTMLElement) {
-    this.view = new Garage();
+    this.view = new Garage(root);
     this.model = new Model('http://127.0.0.1:3000');
     this.root = root;
     this.selectedCarId = '';
@@ -27,6 +29,8 @@ class App {
     this.countCars = 0;
     this.countPages = 1;
     this.carsOnPage = 7;
+    this.randomCarsNames = ['Tesla', 'Audi', 'BMW', 'Opel', 'Renault', 'Lada', 'Ferrari', 'Volkswagen', 'Mazda', 'Suzuki'];
+    this.randomCarsModels = ['100', '200', '300', '400', '500', '600', '700', '800', '900', '1000'];
   }
 
   async start() {
@@ -37,9 +41,7 @@ class App {
       this.countPages = Math.ceil(this.countCars / this.carsOnPage);
     }
 
-
-    
-    this.view.createGarage(this.root, allCars);
+    this.view.createGarage(allCars, this.countCars);
 
     if (this.countPages === this.currentPage) {
       (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
@@ -60,10 +62,25 @@ class App {
         };
 
         if (eventId.startsWith('remove')) {
+          
           const carId = eventId.slice(7);
           await this.model.removeCar(carId);
           const element = document.getElementById(`wrapper-${carId}`);
           element?.remove();
+
+          const cars = await this.model.getCars(this.currentPage);
+          const allCars = await cars.cars;
+          if (cars.carsCount) {
+            this.countCars = +cars.carsCount;
+            this.countPages = Math.ceil(this.countCars / this.carsOnPage);
+          }
+          this.view.createCars(allCars);
+          this.updateCarsCount();
+          this.view.addPagination();
+
+          if (this.countPages === this.currentPage) {
+            (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
+          }
         };
 
         if (eventId.startsWith('update')) {
@@ -92,6 +109,8 @@ class App {
           const carColor = (document.getElementById('new-car-color') as HTMLInputElement).value;
           const car: ICar = await this.model.addCar(carName, carColor);
           this.view.createCarElement(car);
+          this.updateCarsCount();
+          this.view.addPagination();
         };
 
         if (eventId === 'next-page') {
@@ -113,7 +132,7 @@ class App {
             (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
           };
 
-          this.view.updateCars(cars.cars);
+          this.view.createCars(cars.cars);
 
           if (this.countPages === this.currentPage) {
             (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
@@ -139,7 +158,11 @@ class App {
             (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
           };
 
-          this.view.updateCars(cars.cars);
+          this.view.createCars(cars.cars);
+        }
+
+        if (eventId === 'generate-cars') {
+          this.generateRandomCars();
         }
       };
     });
@@ -199,6 +222,31 @@ class App {
     (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = true;
     cancelAnimationFrame(animationId);
     const stop = await this.model.stop(carId);
+  }
+
+  async generateRandomCars(carsCount: number = 100) {
+    for (let i = 0; i < carsCount; i++) {
+      this.countCars
+      const carName = this.randomCarsNames[Math.floor(Math.random() * 10)];
+      const carModel = this.randomCarsModels[Math.floor(Math.random() * 10)];
+      const carColor = '#' + Math.floor(Math.random()* 16777215).toString(16);
+      this.model.addCar(carName + ' ' + carModel, carColor);
+    };
+
+    const cars = await this.model.getCars(this.currentPage);
+    const allCars = await cars.cars;
+    if (cars.carsCount) {
+      this.countCars = +cars.carsCount;
+      this.countPages = Math.ceil(this.countCars / this.carsOnPage);
+    }
+
+    this.view.createCars(allCars);
+    this.updateCarsCount(this.countCars);
+    this.view.addPagination();
+  }
+
+  updateCarsCount(count: number = this.countCars) {
+    (document.getElementById('cars-count') as HTMLElement).textContent = count.toString();
   }
 }
 

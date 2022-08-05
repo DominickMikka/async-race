@@ -2,25 +2,28 @@ import ICar from '../interfaces/car';
 
 class Garage {
   carsWrapper: HTMLElement;
+  paginationWrapper: HTMLElement;
+  root: HTMLElement;
 
-  constructor() {
+  constructor(root: HTMLElement) {
     this.carsWrapper = document.createElement('div');
     this.carsWrapper.classList.add('cars');
+    this.paginationWrapper = document.createElement('div');
+    this.paginationWrapper.classList.add('pagination');
+    this.root = root;
   }
 
-  createGarage(root: HTMLElement, cars: ICar[]): void {
-    cars.forEach((car: ICar) => {
-      //this.carsWrapper.insertAdjacentHTML('beforeend', this.createCarElement(car));
-      this.createCarElement(car);
-    });
-
-    root.insertAdjacentHTML('afterbegin', this.createMenu() + 
+  createGarage(cars: ICar[], carsCount: number): void {
+    this.createCars(cars);
+    this.addPagination();
+    this.root.insertAdjacentHTML('afterbegin', this.createMenu() + 
                                           this.createControls() + 
-                                          this.createGarageLabel(cars.length) + 
+                                          this.createGarageLabel(carsCount) + 
                                           this.createPageLabel(1)
     );
-    root.append(this.carsWrapper);
-    root.insertAdjacentHTML('beforeend', this.addPagination());
+    this.root.append(this.carsWrapper);
+    this.root.append(this.paginationWrapper);
+    
   }
 
   createMenu() {
@@ -45,7 +48,7 @@ class Garage {
   createGarageLabel(countCars: number) {
     return `
       <div class='garage-label'>
-        Count cars in garage: <strong>${countCars}</strong>
+        Count cars in the garage: <strong id='cars-count'>${countCars}</strong>
       </div>
     `;
   }
@@ -58,16 +61,15 @@ class Garage {
     `;
   }
 
-  addPagination() {
-    return `
-      <div class='pagination'>
-        <button id='prev-page' disabled>Prev page</button>
-        <button id='next-page'>Next page</button>
-      </div>
-      `;
+  addPagination(paginationWrapper: HTMLElement = this.paginationWrapper) {
+    this.paginationWrapper.innerHTML = '';
+    const pagination = `<button id='prev-page' disabled>Prev page</button>
+      <button id='next-page'>Next page</button>`;
+
+    paginationWrapper.insertAdjacentHTML('beforeend', pagination);
   }
 
-  updateCars(cars: ICar[]) {
+  createCars(cars: ICar[]) {
     this.carsWrapper.innerHTML = '';
     cars.forEach((car: ICar) => {
       this.createCarElement(car);
