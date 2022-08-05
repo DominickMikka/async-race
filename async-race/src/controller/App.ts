@@ -35,13 +35,10 @@ class App {
 
   async start() {
     this.view.createGarage();
-    
+
     const cars = await this.getCars();
     this.view.createCars(cars);
-
-    if (this.countPages === this.currentPage) {
-      (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
-    }
+    this.checkAvailablePagination(this.currentPage, this.countPages);
 
     document.addEventListener('click', async (event) => {
 
@@ -67,10 +64,7 @@ class App {
 
           const cars = await this.getCars();
           this.view.createCars(cars);
-
-          if (this.countPages === this.currentPage) {
-            (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
-          }
+          this.checkAvailablePagination(this.currentPage, this.countPages);
         };
 
         if (eventId.startsWith('update')) {
@@ -98,53 +92,71 @@ class App {
           const carName = (document.getElementById('new-car-name') as HTMLInputElement).value;
           const carColor = (document.getElementById('new-car-color') as HTMLInputElement).value;
           const car: ICar = await this.model.addCar(carName, carColor);
-          //this.view.createCarElement(car);
           const cars = await this.getCars();
           this.view.createCars(cars);
+          this.checkAvailablePagination(this.currentPage, this.countPages);
         };
-
-        if (eventId === 'next-page') {
-          this.currentPage++;
-          (document.getElementById('page-number') as HTMLElement).textContent = this.currentPage.toString();
-
-          const cars = await this.getCars();
-          this.view.createCars(cars);
-
-          if (this.currentPage === 1) {
-            (document.getElementById('prev-page') as HTMLButtonElement).disabled = true;
-            (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
-          } else {
-            (document.getElementById('prev-page') as HTMLButtonElement).disabled = false;
-            (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
-          };
-
-          if (this.countPages === this.currentPage) {
-            (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
-          }
-        }
-
-        if (eventId === 'prev-page') {
-          this.currentPage--;
-          (document.getElementById('page-number') as HTMLElement).textContent = this.currentPage.toString();
-
-          const cars = await this.getCars();
-          this.view.createCars(cars);
-
-          if (this.currentPage === 1) {
-            (document.getElementById('prev-page') as HTMLButtonElement).disabled = true;
-            (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
-          } else {
-            (document.getElementById('prev-page') as HTMLButtonElement).disabled = false;
-            (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
-          };
-        }
 
         if (eventId === 'generate-cars') {
           this.generateRandomCars();
         }
       };
     });
+
+    const pagination = document.querySelector('.pagination');
+
+    if (pagination) {
+      pagination.addEventListener('click', async (event) => {
+        if (event.target instanceof HTMLElement) {
+          const eventId = event.target.id;
+
+          if (eventId === 'next-page') {
+            this.currentPage++;
+            (document.getElementById('page-number') as HTMLElement).textContent = this.currentPage.toString();
+  
+            const cars = await this.getCars();
+            this.view.createCars(cars);
+  
+            this.checkAvailablePagination(this.currentPage, this.countPages);
+          }
+  
+          if (eventId === 'prev-page') {
+            this.currentPage--;
+            (document.getElementById('page-number') as HTMLElement).textContent = this.currentPage.toString();
+  
+            const cars = await this.getCars();
+            this.view.createCars(cars);
+  
+            this.checkAvailablePagination(this.currentPage, this.countPages);
+          }
+
+        }
+        
+      });
+    }
+
   };
+
+  checkAvailablePagination(currentPage: number, countPages: number) {
+    if (countPages === 1) {
+      (document.getElementById('prev-page') as HTMLButtonElement).disabled = true;
+      (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
+    } else
+    if (countPages > 1 && currentPage === 1) {
+      (document.getElementById('prev-page') as HTMLButtonElement).disabled = true;
+      (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
+    } else
+    if (currentPage === countPages) {
+      (document.getElementById('prev-page') as HTMLButtonElement).disabled = false;
+      (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
+    } else
+    if (currentPage !== countPages) {
+      (document.getElementById('prev-page') as HTMLButtonElement).disabled = false;
+      (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
+    } else {
+
+    }
+  }
 
   async singleCarRace(e: string) {
     const carId = e;
@@ -212,6 +224,7 @@ class App {
 
     const cars = await this.getCars();
     this.view.createCars(cars);
+    this.checkAvailablePagination(this.currentPage, this.countPages);
   }
 
   async updateCountCars(countCars: string) {
@@ -227,8 +240,8 @@ class App {
     const { cars, countCars } = await this.model.getCars(this.currentPage);
 
     if (countCars) {
+      this.updateCountCars(countCars);
       this.updateCountPages();
-      this.updateCountCars(countCars)
     }
 
     return cars;
