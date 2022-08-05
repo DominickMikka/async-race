@@ -35,10 +35,7 @@ class App {
 
   async start() {
     this.view.createGarage();
-
-    const cars = await this.getCars();
-    this.view.createCars(cars);
-    this.checkAvailablePagination(this.currentPage, this.countPages);
+    this.updateApp();
 
     document.addEventListener('click', async (event) => {
 
@@ -61,10 +58,7 @@ class App {
           await this.model.removeCar(carId);
           const element = document.getElementById(`wrapper-${carId}`);
           element?.remove();
-
-          const cars = await this.getCars();
-          this.view.createCars(cars);
-          this.checkAvailablePagination(this.currentPage, this.countPages);
+          this.updateApp();
         };
 
         if (eventId.startsWith('update')) {
@@ -92,13 +86,16 @@ class App {
           const carName = (document.getElementById('new-car-name') as HTMLInputElement).value;
           const carColor = (document.getElementById('new-car-color') as HTMLInputElement).value;
           const car: ICar = await this.model.addCar(carName, carColor);
-          const cars = await this.getCars();
-          this.view.createCars(cars);
-          this.checkAvailablePagination(this.currentPage, this.countPages);
+          this.updateApp();
         };
 
         if (eventId === 'generate-cars') {
           this.generateRandomCars();
+        }
+
+        if (eventId === 'reset-cars') {
+          const cars: NodeListOf<HTMLElement> = document.querySelectorAll('.car-item');
+          cars.forEach(element => element.style.transform = `translateX(0px)`);
         }
       };
     });
@@ -107,54 +104,38 @@ class App {
 
     if (pagination) {
       pagination.addEventListener('click', async (event) => {
-        if (event.target instanceof HTMLElement) {
+        if (event.target instanceof HTMLButtonElement) {
           const eventId = event.target.id;
-
           if (eventId === 'next-page') {
             this.currentPage++;
-            (document.getElementById('page-number') as HTMLElement).textContent = this.currentPage.toString();
-  
-            const cars = await this.getCars();
-            this.view.createCars(cars);
-  
-            this.checkAvailablePagination(this.currentPage, this.countPages);
-          }
-  
-          if (eventId === 'prev-page') {
+            (<HTMLElement>document.getElementById('page-number')).textContent = this.currentPage.toString();
+            this.updateApp();
+          } else if (eventId === 'prev-page') {
             this.currentPage--;
-            (document.getElementById('page-number') as HTMLElement).textContent = this.currentPage.toString();
-  
-            const cars = await this.getCars();
-            this.view.createCars(cars);
-  
-            this.checkAvailablePagination(this.currentPage, this.countPages);
-          }
-
-        }
-        
+            (<HTMLElement>document.getElementById('page-number')).textContent = this.currentPage.toString();
+            this.updateApp();
+          };
+        };
       });
-    }
+    };
 
   };
 
   checkAvailablePagination(currentPage: number, countPages: number) {
+    const prevPageButton = <HTMLButtonElement>document.getElementById('prev-page');
+    const nextPageButton = <HTMLButtonElement>document.getElementById('next-page');
     if (countPages === 1) {
-      (document.getElementById('prev-page') as HTMLButtonElement).disabled = true;
-      (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
-    } else
-    if (countPages > 1 && currentPage === 1) {
-      (document.getElementById('prev-page') as HTMLButtonElement).disabled = true;
-      (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
-    } else
-    if (currentPage === countPages) {
-      (document.getElementById('prev-page') as HTMLButtonElement).disabled = false;
-      (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
-    } else
-    if (currentPage !== countPages) {
-      (document.getElementById('prev-page') as HTMLButtonElement).disabled = false;
-      (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
-    } else {
-
+      prevPageButton.disabled = true;
+      nextPageButton.disabled = true;
+    } else if (countPages > 1 && currentPage === 1) {
+      prevPageButton.disabled = true;
+      nextPageButton.disabled = false;
+    } else if (currentPage === countPages) {
+      prevPageButton.disabled = false;
+      nextPageButton.disabled = true;
+    } else if (currentPage !== countPages) {
+      prevPageButton.disabled = false;
+      nextPageButton.disabled = false;
     }
   }
 
@@ -176,11 +157,8 @@ class App {
     let done = false;
       
     const animation = async () => {
-  
-        if (!begin) {
-          begin = 0;
-        }
-  
+        if (!begin) begin = 0;
+
         if (begin < finish) {
           begin = Math.ceil(begin + (step * start.velocity)) + 2;
           car.style.transform = `translateX(${begin}px)`;
@@ -189,17 +167,13 @@ class App {
           (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = false;
           (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = true;
         }
-
         if (!done) {
           animationId = requestAnimationFrame(animation);
           this.animationId = animationId;
         }
-
       }
       animationId = requestAnimationFrame(animation);
-
       const drive = await this.model.drive(carId);
-
       if (!drive) {
         cancelAnimationFrame(animationId);
         (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = false;
@@ -232,19 +206,23 @@ class App {
     (document.getElementById('cars-count') as HTMLElement).textContent = countCars;
   }
 
-  updateCountPages() {
+  async updateCountPages() {
     this.countPages = Math.ceil(this.countCars / this.carsOnPage);
   }
 
   async getCars() {
     const { cars, countCars } = await this.model.getCars(this.currentPage);
-
     if (countCars) {
       this.updateCountCars(countCars);
       this.updateCountPages();
     }
-
     return cars;
+  }
+
+  async updateApp() {
+    const cars = await this.getCars();
+    this.view.createCars(cars);
+    this.checkAvailablePagination(this.currentPage, this.countPages);
   }
 }
 
