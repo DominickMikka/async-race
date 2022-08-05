@@ -10,7 +10,7 @@ class Model {
     const cars = await fetch(`${this.serverUrl}/garage?_page=${page}&_limit=7`);
     return { 
       cars: await cars.json(), 
-      carsCount: cars.headers.get('X-Total-Count'),
+      countCars: cars.headers.get('X-Total-Count'),
     };
   }
 

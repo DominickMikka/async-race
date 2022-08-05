@@ -2,27 +2,25 @@ import ICar from '../interfaces/car';
 
 class Garage {
   carsWrapper: HTMLElement;
-  paginationWrapper: HTMLElement;
+
   root: HTMLElement;
 
   constructor(root: HTMLElement) {
     this.carsWrapper = document.createElement('div');
     this.carsWrapper.classList.add('cars');
-    this.paginationWrapper = document.createElement('div');
-    this.paginationWrapper.classList.add('pagination');
     this.root = root;
   }
 
-  createGarage(cars: ICar[], carsCount: number): void {
-    this.createCars(cars);
-    this.addPagination();
+  createGarage(): void {
+    //this.createCars(cars);
     this.root.insertAdjacentHTML('afterbegin', this.createMenu() + 
                                           this.createControls() + 
-                                          this.createGarageLabel(carsCount) + 
+                                          this.createGarageLabel() + 
                                           this.createPageLabel(1)
     );
     this.root.append(this.carsWrapper);
-    this.root.append(this.paginationWrapper);
+    this.root.insertAdjacentHTML('beforeend', this.createPagination());
+
     
   }
 
@@ -45,10 +43,10 @@ class Garage {
     `;
   }
 
-  createGarageLabel(countCars: number) {
+  createGarageLabel() {
     return `
       <div class='garage-label'>
-        Count cars in the garage: <strong id='cars-count'>${countCars}</strong>
+        Count cars in the garage: <strong id='cars-count'></strong>
       </div>
     `;
   }
@@ -57,16 +55,15 @@ class Garage {
     return `
       <div class='page-label'>
         Current page is: <strong id='page-number'>${page}</strong>
-      </div>
-    `;
+      </div>`;
   }
 
-  addPagination(paginationWrapper: HTMLElement = this.paginationWrapper) {
-    this.paginationWrapper.innerHTML = '';
-    const pagination = `<button id='prev-page' disabled>Prev page</button>
-      <button id='next-page'>Next page</button>`;
-
-    paginationWrapper.insertAdjacentHTML('beforeend', pagination);
+  createPagination() {
+    return `
+      <div class='pagination'>
+        <button id='prev-page' disabled>Prev page</button>
+        <button id='next-page'>Next page</button>
+      </div>`;
   }
 
   createCars(cars: ICar[]) {

@@ -34,20 +34,17 @@ class App {
   }
 
   async start() {
-    const cars = await this.model.getCars(this.currentPage);
-    const allCars = await cars.cars;
-    if (cars.carsCount) {
-      this.countCars = +cars.carsCount;
-      this.countPages = Math.ceil(this.countCars / this.carsOnPage);
-    }
-
-    this.view.createGarage(allCars, this.countCars);
+    this.view.createGarage();
+    
+    const cars = await this.getCars();
+    this.view.createCars(cars);
 
     if (this.countPages === this.currentPage) {
       (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
     }
 
     document.addEventListener('click', async (event) => {
+
       if (event.target instanceof HTMLElement) {
         const eventId = event.target.id;
 
@@ -68,15 +65,8 @@ class App {
           const element = document.getElementById(`wrapper-${carId}`);
           element?.remove();
 
-          const cars = await this.model.getCars(this.currentPage);
-          const allCars = await cars.cars;
-          if (cars.carsCount) {
-            this.countCars = +cars.carsCount;
-            this.countPages = Math.ceil(this.countCars / this.carsOnPage);
-          }
-          this.view.createCars(allCars);
-          this.updateCarsCount();
-          this.view.addPagination();
+          const cars = await this.getCars();
+          this.view.createCars(cars);
 
           if (this.countPages === this.currentPage) {
             (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
@@ -108,21 +98,17 @@ class App {
           const carName = (document.getElementById('new-car-name') as HTMLInputElement).value;
           const carColor = (document.getElementById('new-car-color') as HTMLInputElement).value;
           const car: ICar = await this.model.addCar(carName, carColor);
-          this.view.createCarElement(car);
-          this.updateCarsCount();
-          this.view.addPagination();
+          //this.view.createCarElement(car);
+          const cars = await this.getCars();
+          this.view.createCars(cars);
         };
 
         if (eventId === 'next-page') {
           this.currentPage++;
-          const cars = await this.model.getCars(this.currentPage);
           (document.getElementById('page-number') as HTMLElement).textContent = this.currentPage.toString();
-          const allCars = await cars.cars;
-          let countCars = 0;
 
-          if (cars.carsCount) {
-            countCars = +cars.carsCount;
-          };
+          const cars = await this.getCars();
+          this.view.createCars(cars);
 
           if (this.currentPage === 1) {
             (document.getElementById('prev-page') as HTMLButtonElement).disabled = true;
@@ -131,8 +117,6 @@ class App {
             (document.getElementById('prev-page') as HTMLButtonElement).disabled = false;
             (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
           };
-
-          this.view.createCars(cars.cars);
 
           if (this.countPages === this.currentPage) {
             (document.getElementById('next-page') as HTMLButtonElement).disabled = true;
@@ -141,14 +125,10 @@ class App {
 
         if (eventId === 'prev-page') {
           this.currentPage--;
-          const cars = await this.model.getCars(this.currentPage);
           (document.getElementById('page-number') as HTMLElement).textContent = this.currentPage.toString();
-          const allCars = await cars.cars;
-          let countCars = 0;
 
-          if (cars.carsCount) {
-            countCars = +cars.carsCount;
-          };
+          const cars = await this.getCars();
+          this.view.createCars(cars);
 
           if (this.currentPage === 1) {
             (document.getElementById('prev-page') as HTMLButtonElement).disabled = true;
@@ -157,8 +137,6 @@ class App {
             (document.getElementById('prev-page') as HTMLButtonElement).disabled = false;
             (document.getElementById('next-page') as HTMLButtonElement).disabled = false;
           };
-
-          this.view.createCars(cars.cars);
         }
 
         if (eventId === 'generate-cars') {
@@ -226,27 +204,34 @@ class App {
 
   async generateRandomCars(carsCount: number = 100) {
     for (let i = 0; i < carsCount; i++) {
-      this.countCars
       const carName = this.randomCarsNames[Math.floor(Math.random() * 10)];
       const carModel = this.randomCarsModels[Math.floor(Math.random() * 10)];
       const carColor = '#' + Math.floor(Math.random()* 16777215).toString(16);
       this.model.addCar(carName + ' ' + carModel, carColor);
     };
 
-    const cars = await this.model.getCars(this.currentPage);
-    const allCars = await cars.cars;
-    if (cars.carsCount) {
-      this.countCars = +cars.carsCount;
-      this.countPages = Math.ceil(this.countCars / this.carsOnPage);
-    }
-
-    this.view.createCars(allCars);
-    this.updateCarsCount(this.countCars);
-    this.view.addPagination();
+    const cars = await this.getCars();
+    this.view.createCars(cars);
   }
 
-  updateCarsCount(count: number = this.countCars) {
-    (document.getElementById('cars-count') as HTMLElement).textContent = count.toString();
+  async updateCountCars(countCars: string) {
+    this.countCars = +countCars;
+    (document.getElementById('cars-count') as HTMLElement).textContent = countCars;
+  }
+
+  updateCountPages() {
+    this.countPages = Math.ceil(this.countCars / this.carsOnPage);
+  }
+
+  async getCars() {
+    const { cars, countCars } = await this.model.getCars(this.currentPage);
+
+    if (countCars) {
+      this.updateCountPages();
+      this.updateCountCars(countCars)
+    }
+
+    return cars;
   }
 }
 
