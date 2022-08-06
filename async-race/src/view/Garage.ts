@@ -38,7 +38,7 @@ class Garage {
       <div class='controls'>
         <label><input type='text' id='new-car-name' placeholder='Car name'> <input type='color' id='new-car-color' /> <button id='create-car'>Create</button></label>
         <label><input type='text' placeholder='Select car' id='car-update-name'> <input type='color' id='car-update-color' /> <button id='update-car'>Update</button></label>
-        <button id='go-race'>Race</button> <button id='reset-cars'>Reset</button> <button id='generate-cars'>Generate cars</button>
+        <button id='go-race'>Race</button> <button id='reset-cars' disabled>Reset</button> <button id='generate-cars'>Generate cars</button>
       </div>
     `;
   }

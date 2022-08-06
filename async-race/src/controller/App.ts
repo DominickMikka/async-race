@@ -96,6 +96,8 @@ class App {
         if (eventId === 'reset-cars') {
           const cars: NodeListOf<HTMLElement> = document.querySelectorAll('.car-item');
           cars.forEach(element => element.style.transform = `translateX(0px)`);
+          const buttonResetRace = <HTMLButtonElement>document.getElementById('reset-cars');
+          buttonResetRace.disabled = true;
         }
       };
     });
@@ -124,7 +126,7 @@ class App {
   checkAvailablePagination(currentPage: number, countPages: number) {
     const prevPageButton = <HTMLButtonElement>document.getElementById('prev-page');
     const nextPageButton = <HTMLButtonElement>document.getElementById('next-page');
-    if (countPages === 1) {
+    if (countPages === 1 || !this.countCars) {
       prevPageButton.disabled = true;
       nextPageButton.disabled = true;
     } else if (countPages > 1 && currentPage === 1) {
@@ -141,19 +143,21 @@ class App {
 
   async singleCarRace(e: string) {
     const carId = e;
-    (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = true;
-    (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = false;
+    const buttonStart = <HTMLButtonElement>document.getElementById(`start-${carId}`);
+    buttonStart.disabled = true;
+    const buttonStop = <HTMLButtonElement>document.getElementById(`stop-${carId}`);
+    buttonStop.disabled = false;
     let start: { distance: number; velocity: number; };
     let animationId: number;
 
-    const car = document.querySelector(`#car-${carId}`) as HTMLElement;
-    const flag = document.querySelector(`#finish-${carId}`) as HTMLElement;
+    const car = <HTMLElement>document.getElementById(`car-${carId}`);
+    const flag = <HTMLElement>document.getElementById(`finish-${carId}`);
     
     start = await this.model.start(carId);
 
     let begin: number;
-    const finish: number = (flag as HTMLElement).getBoundingClientRect().x;
-    const step: number = (flag as HTMLElement).getBoundingClientRect().x / start.distance;
+    const finish: number = flag.getBoundingClientRect().x;
+    const step: number = flag.getBoundingClientRect().x / start.distance;
     let done = false;
       
     const animation = async () => {
@@ -164,26 +168,31 @@ class App {
           car.style.transform = `translateX(${begin}px)`;
         } else {
           done = true;
-          (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = false;
-          (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = true;
+          buttonStart.disabled = false;
+          buttonStop.disabled = true;
+          const buttonResetRace = <HTMLButtonElement>document.getElementById('reset-cars');
+          buttonResetRace.disabled = false;
         }
         if (!done) {
           animationId = requestAnimationFrame(animation);
           this.animationId = animationId;
         }
-      }
-      animationId = requestAnimationFrame(animation);
-      const drive = await this.model.drive(carId);
-      if (!drive) {
-        cancelAnimationFrame(animationId);
-        (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = false;
-        (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = true;
-      }
+    }
+    animationId = requestAnimationFrame(animation);
+    const drive = await this.model.drive(carId);
+    if (!drive) {
+      cancelAnimationFrame(animationId);
+      buttonStart.disabled = false;
+    };
   }
 
   async stopRace(carId: string, animationId: number) {
-    (document.getElementById(`start-${carId}`) as HTMLButtonElement).disabled = false;
-    (document.getElementById(`stop-${carId}`) as HTMLButtonElement).disabled = true;
+    const car = <HTMLElement>document.getElementById(`car-${carId}`);
+    car.style.transform = `translateX(0px)`;
+    const buttonStart = <HTMLButtonElement>document.getElementById(`start-${carId}`);
+    buttonStart.disabled = false;
+    const buttonStop = <HTMLButtonElement>document.getElementById(`stop-${carId}`);
+    buttonStop.disabled = true;
     cancelAnimationFrame(animationId);
     const stop = await this.model.stop(carId);
   }
