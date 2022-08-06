@@ -38,7 +38,7 @@ class Garage {
       <div class='controls'>
         <label><input type='text' id='new-car-name' placeholder='Car name'> <input type='color' id='new-car-color' /> <button id='create-car'>Create</button></label>
         <label><input type='text' placeholder='Select car' id='car-update-name'> <input type='color' id='car-update-color' /> <button id='update-car'>Update</button></label>
-        <button id='go-race'>Race</button> <button id='reset-cars' disabled>Reset</button> <button id='generate-cars'>Generate cars</button>
+        <button id='race'>Race</button> <button id='reset-cars' disabled>Reset</button> <button id='generate-cars'>Generate cars</button>
       </div>
     `;
   }
@@ -76,7 +76,7 @@ class Garage {
   createCarElement(car: ICar, carsWrapper: HTMLElement = this.carsWrapper) {
     
     const carTemplate = `
-      <div class='car-wrapper' id='wrapper-${car.id}'>
+      <div class='car-wrapper' id='wrapper-${car.id}' data-car-id='${car.id}'>
         <button class='button-select' id='select-${car.id}'>Select</button> 
         <button class='button-remove' id='remove-${car.id}'>Remove</button>
         <button class='button-start' id='start-${car.id}'>Start</button> 

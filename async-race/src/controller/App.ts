@@ -37,70 +37,71 @@ class App {
     this.view.createGarage();
     this.updateApp();
 
-    document.addEventListener('click', async (event) => {
+    const cars = <HTMLElement>document.querySelector('.cars');
 
+    cars.addEventListener('click', async (event) => {
       if (event.target instanceof HTMLElement) {
-        const eventId = event.target.id;
-
-        if (eventId.startsWith('select')) {
-          const carId = eventId.slice(7);
-          const car = await this.model.getCar(carId);
-          this.selectedCarId = carId;
-          this.selectedCarName = car.name;
-          this.selectedCarColor = car.color;
-          (document.getElementById('car-update-name') as HTMLInputElement).value = car.name;
-          (document.getElementById('car-update-color') as HTMLInputElement).value = car.color;
-        };
-
-        if (eventId.startsWith('remove')) {
-          
-          const carId = eventId.slice(7);
-          await this.model.removeCar(carId);
-          const element = document.getElementById(`wrapper-${carId}`);
-          element?.remove();
-          this.updateApp();
-        };
-
-        if (eventId.startsWith('update')) {
-          const car = await this.model.updateCar(this.selectedCarId, (document.getElementById('car-update-name') as HTMLInputElement).value, (document.getElementById('car-update-color') as HTMLInputElement).value);
-          (document.getElementById(`car-${this.selectedCarId}`) as HTMLElement).setAttribute('fill', (document.getElementById('car-update-color') as HTMLInputElement).value);
-          (document.getElementById(`car-name-${this.selectedCarId}`) as HTMLElement).innerHTML = (document.getElementById('car-update-name') as HTMLInputElement).value;
-        };
-
-        if (eventId.startsWith('go-race')) {
-          const buttonsStart = document.querySelectorAll('.button-start');
-          buttonsStart.forEach(e => (e as HTMLElement).click());
-        };
-
-        if (eventId.startsWith('start')) {
-          const carId = eventId.slice(6);
-          this.singleCarRace(carId);
-        };
-
-        if (eventId.startsWith('stop')) {
-          const carId = eventId.slice(5);
-          this.stopRace(carId, this.animationId);
-        };
-
-        if (eventId.startsWith('create-car')) {
-          const carName = (document.getElementById('new-car-name') as HTMLInputElement).value;
-          const carColor = (document.getElementById('new-car-color') as HTMLInputElement).value;
-          const car: ICar = await this.model.addCar(carName, carColor);
-          this.updateApp();
-        };
-
-        if (eventId === 'generate-cars') {
-          this.generateRandomCars();
-        }
-
-        if (eventId === 'reset-cars') {
-          const cars: NodeListOf<HTMLElement> = document.querySelectorAll('.car-item');
-          cars.forEach(element => element.style.transform = `translateX(0px)`);
-          const buttonResetRace = <HTMLButtonElement>document.getElementById('reset-cars');
-          buttonResetRace.disabled = true;
+        const classElement = event.target.className;
+        const carId = (<HTMLElement>event.target.closest('.car-wrapper')).dataset.carId;
+        if (carId) {
+          if (classElement === 'button-select') {
+            const car = await this.model.getCar(carId);
+            this.selectedCarId = carId;
+            this.selectedCarName = car.name;
+            this.selectedCarColor = car.color;
+            (document.getElementById('car-update-name') as HTMLInputElement).value = car.name;
+            (document.getElementById('car-update-color') as HTMLInputElement).value = car.color;
+          };
+          if (classElement === 'button-remove') {
+            await this.model.removeCar(carId);
+            const element = event.target.closest('.car-wrapper');
+            element?.remove();
+            this.updateApp();
+          };
+          if (classElement === 'button-start') {
+            this.singleCarRace(carId);
+          };
+          if (classElement === 'button-stop') {
+            this.stopRace(carId, this.animationId);
+          };
         }
       };
     });
+
+    const updateButton = <HTMLButtonElement>document.getElementById('update-car');
+    updateButton.addEventListener('click', async () => {
+      const car = await this.model.updateCar(this.selectedCarId, (document.getElementById('car-update-name') as HTMLInputElement).value, (document.getElementById('car-update-color') as HTMLInputElement).value);
+      (document.getElementById(`car-${this.selectedCarId}`) as HTMLElement).setAttribute('fill', (document.getElementById('car-update-color') as HTMLInputElement).value);
+      (document.getElementById(`car-name-${this.selectedCarId}`) as HTMLElement).innerHTML = (document.getElementById('car-update-name') as HTMLInputElement).value;
+    });
+
+    const raceButton = <HTMLButtonElement>document.getElementById('race');
+    raceButton.addEventListener('click', () => {
+      raceButton.disabled = true;
+      const buttonsStart = document.querySelectorAll('.button-start');
+      buttonsStart.forEach(e => (e as HTMLElement).click());
+    });
+
+    const addCar = <HTMLButtonElement>document.getElementById('create-car');
+    addCar.addEventListener('click', async () => {
+      const carName = (document.getElementById('new-car-name') as HTMLInputElement).value;
+      const carColor = (document.getElementById('new-car-color') as HTMLInputElement).value;
+      const car: ICar = await this.model.addCar(carName, carColor);
+      this.updateApp();
+    });
+
+    const generateCars = <HTMLButtonElement>document.getElementById('generate-cars');
+    generateCars.addEventListener('click', () => {
+      this.generateRandomCars();
+    });
+
+    const resetCars = <HTMLButtonElement>document.getElementById('reset-cars');
+    resetCars.addEventListener('click', () => {
+      const cars: NodeListOf<HTMLElement> = document.querySelectorAll('.car-item');
+      cars.forEach(element => element.style.transform = `translateX(0px)`);
+      const buttonResetRace = <HTMLButtonElement>document.getElementById('reset-cars');
+      buttonResetRace.disabled = true;
+    });    
 
     const pagination = document.querySelector('.pagination');
 
@@ -172,6 +173,8 @@ class App {
           buttonStop.disabled = true;
           const buttonResetRace = <HTMLButtonElement>document.getElementById('reset-cars');
           buttonResetRace.disabled = false;
+          const buttonRace = <HTMLButtonElement>document.getElementById('go-race');
+          buttonRace.disabled = false;
         }
         if (!done) {
           animationId = requestAnimationFrame(animation);
