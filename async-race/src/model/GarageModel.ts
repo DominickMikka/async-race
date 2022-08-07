@@ -1,4 +1,4 @@
-class Model {
+class GarageModel {
 
   serverUrl: string;
 
@@ -69,4 +69,4 @@ class Model {
   }
 }
 
-export default Model;
+export default GarageModel;

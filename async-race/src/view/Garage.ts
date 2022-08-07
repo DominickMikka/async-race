@@ -2,33 +2,35 @@ import ICar from '../interfaces/car';
 
 class Garage {
   carsWrapper: HTMLElement;
-
+  bodyPage: HTMLElement;
   root: HTMLElement;
 
   constructor(root: HTMLElement) {
     this.carsWrapper = document.createElement('div');
     this.carsWrapper.classList.add('cars');
+    this.bodyPage = document.createElement('div');
+    this.bodyPage.classList.add('content');
     this.root = root;
   }
 
   createGarage(): void {
-    //this.createCars(cars);
-    this.root.insertAdjacentHTML('afterbegin', this.createMenu() + 
-                                          this.createControls() + 
-                                          this.createGarageLabel() + 
-                                          this.createPageLabel(1)
+    this.bodyPage.innerHTML = '';
+    this.root.insertAdjacentHTML('afterbegin', this.createMenu());
+    this.bodyPage.insertAdjacentHTML('afterbegin', 
+      this.createControls() + 
+      this.createGarageLabel() + 
+      this.createPageLabel(1)
     );
-    this.root.append(this.carsWrapper);
-    this.root.insertAdjacentHTML('beforeend', this.createPagination());
-
-    
+    this.bodyPage.append(this.carsWrapper);
+    this.bodyPage.insertAdjacentHTML('beforeend', this.createPagination());
+    this.root.append(this.bodyPage);
   }
 
   createMenu() {
     return `
       <div class='top-menu'>
-        <button>To garage</button>
-        <button>To winners</button>
+        <button id='garage-page'>To garage</button>
+        <button id='winners-page'>To winners</button>
       </div>
     `;
   }

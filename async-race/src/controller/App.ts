@@ -1,10 +1,21 @@
 import Garage from '../view/Garage';
-import Model from '../model/Model';
+import GarageModel from '../model/GarageModel';
+import Winners from '../view/Winners';
+import WinnersModel from '../model/WinnersModel';
 import ICar from '../interfaces/car';
 
+const enum buttonsClasses {
+  buttonSelect = 'button-select',
+  buttonRemove = 'button-remove',
+  buttonStart = 'button-start',
+  buttonStop = 'button-stop',
+}
+
 class App {
-  view: Garage;
-  model: Model;
+  garageView: Garage;
+  garageModel: GarageModel;
+  winnersView: Winners;
+  winnersModel: WinnersModel;
   root: HTMLElement;
   selectedCarId: string;
   selectedCarName: string;
@@ -14,12 +25,15 @@ class App {
   countCars: number;
   countPages: number;
   carsOnPage: number;
+  winnersCount: number;
   randomCarsNames: string[];
   randomCarsModels: string[];
   
   constructor(root: HTMLElement) {
-    this.view = new Garage(root);
-    this.model = new Model('http://127.0.0.1:3000');
+    this.garageView = new Garage(root);
+    this.garageModel = new GarageModel('http://127.0.0.1:3000');
+    this.winnersView = new Winners(root);
+    this.winnersModel = new WinnersModel('http://127.0.0.1:3000');
     this.root = root;
     this.selectedCarId = '';
     this.selectedCarName = '';
@@ -31,11 +45,12 @@ class App {
     this.carsOnPage = 7;
     this.randomCarsNames = ['Tesla', 'Audi', 'BMW', 'Opel', 'Renault', 'Lada', 'Ferrari', 'Volkswagen', 'Mazda', 'Suzuki'];
     this.randomCarsModels = ['100', '200', '300', '400', '500', '600', '700', '800', '900', '1000'];
+    this.winnersCount = 0;
   }
 
   async start() {
-    this.view.createGarage();
-    this.updateApp();
+    this.garageView.createGarage();
+    this.updateGarage();
 
     const cars = <HTMLElement>document.querySelector('.cars');
 
@@ -44,24 +59,24 @@ class App {
         const classElement = event.target.className;
         const carId = (<HTMLElement>event.target.closest('.car-wrapper')).dataset.carId;
         if (carId) {
-          if (classElement === 'button-select') {
-            const car = await this.model.getCar(carId);
+          if (classElement === buttonsClasses.buttonSelect) {
+            const car = await this.garageModel.getCar(carId);
             this.selectedCarId = carId;
             this.selectedCarName = car.name;
             this.selectedCarColor = car.color;
             (document.getElementById('car-update-name') as HTMLInputElement).value = car.name;
             (document.getElementById('car-update-color') as HTMLInputElement).value = car.color;
           };
-          if (classElement === 'button-remove') {
-            await this.model.removeCar(carId);
+          if (classElement ===  buttonsClasses.buttonRemove) {
+            await this.garageModel.removeCar(carId);
             const element = event.target.closest('.car-wrapper');
             element?.remove();
-            this.updateApp();
+            this.updateGarage();
           };
-          if (classElement === 'button-start') {
+          if (classElement === buttonsClasses.buttonStart) {
             this.singleCarRace(carId);
           };
-          if (classElement === 'button-stop') {
+          if (classElement === buttonsClasses.buttonStop) {
             this.stopRace(carId, this.animationId);
           };
         }
@@ -70,7 +85,7 @@ class App {
 
     const updateButton = <HTMLButtonElement>document.getElementById('update-car');
     updateButton.addEventListener('click', async () => {
-      const car = await this.model.updateCar(this.selectedCarId, (document.getElementById('car-update-name') as HTMLInputElement).value, (document.getElementById('car-update-color') as HTMLInputElement).value);
+      const car = await this.garageModel.updateCar(this.selectedCarId, (document.getElementById('car-update-name') as HTMLInputElement).value, (document.getElementById('car-update-color') as HTMLInputElement).value);
       (document.getElementById(`car-${this.selectedCarId}`) as HTMLElement).setAttribute('fill', (document.getElementById('car-update-color') as HTMLInputElement).value);
       (document.getElementById(`car-name-${this.selectedCarId}`) as HTMLElement).innerHTML = (document.getElementById('car-update-name') as HTMLInputElement).value;
     });
@@ -86,8 +101,8 @@ class App {
     addCar.addEventListener('click', async () => {
       const carName = (document.getElementById('new-car-name') as HTMLInputElement).value;
       const carColor = (document.getElementById('new-car-color') as HTMLInputElement).value;
-      const car: ICar = await this.model.addCar(carName, carColor);
-      this.updateApp();
+      const car: ICar = await this.garageModel.addCar(carName, carColor);
+      this.updateGarage();
     });
 
     const generateCars = <HTMLButtonElement>document.getElementById('generate-cars');
@@ -106,22 +121,36 @@ class App {
     const pagination = document.querySelector('.pagination');
 
     if (pagination) {
-      pagination.addEventListener('click', async (event) => {
+      pagination.addEventListener('click', (event) => {
         if (event.target instanceof HTMLButtonElement) {
           const eventId = event.target.id;
           if (eventId === 'next-page') {
             this.currentPage++;
             (<HTMLElement>document.getElementById('page-number')).textContent = this.currentPage.toString();
-            this.updateApp();
+            this.updateGarage();
           } else if (eventId === 'prev-page') {
             this.currentPage--;
             (<HTMLElement>document.getElementById('page-number')).textContent = this.currentPage.toString();
-            this.updateApp();
+            this.updateGarage();
           };
         };
       });
     };
 
+    const winnersPage = <HTMLButtonElement>document.getElementById('winners-page');
+    winnersPage.addEventListener('click', async () => {
+      const currentPageContent = <HTMLElement>document.querySelector('.content');
+      currentPageContent.remove();
+      await this.updateWinners();
+      this.winnersView.createWinnersPage(this.winnersCount);
+    });
+
+    const garagePage = <HTMLButtonElement>document.getElementById('garage-page');
+    garagePage.addEventListener('click', () => {
+      const currentPageContent = <HTMLElement>document.querySelector('#root');
+      currentPageContent.innerHTML = '';
+      this.start();
+    });
   };
 
   checkAvailablePagination(currentPage: number, countPages: number) {
@@ -154,7 +183,7 @@ class App {
     const car = <HTMLElement>document.getElementById(`car-${carId}`);
     const flag = <HTMLElement>document.getElementById(`finish-${carId}`);
     
-    start = await this.model.start(carId);
+    start = await this.garageModel.start(carId);
 
     let begin: number;
     const finish: number = flag.getBoundingClientRect().x;
@@ -165,7 +194,8 @@ class App {
         if (!begin) begin = 0;
 
         if (begin < finish) {
-          begin = Math.ceil(begin + (step * start.velocity)) + 2;
+          begin += 10;
+          //begin = Math.ceil(begin + (step * start.velocity)) + 2;
           car.style.transform = `translateX(${begin}px)`;
         } else {
           done = true;
@@ -173,8 +203,9 @@ class App {
           buttonStop.disabled = true;
           const buttonResetRace = <HTMLButtonElement>document.getElementById('reset-cars');
           buttonResetRace.disabled = false;
-          const buttonRace = <HTMLButtonElement>document.getElementById('go-race');
+          const buttonRace = <HTMLButtonElement>document.getElementById('race');
           buttonRace.disabled = false;
+          this.winnersModel.addWinner(+carId, 1, +(start.distance / start.velocity / 1000).toFixed(4));
         }
         if (!done) {
           animationId = requestAnimationFrame(animation);
@@ -182,7 +213,7 @@ class App {
         }
     }
     animationId = requestAnimationFrame(animation);
-    const drive = await this.model.drive(carId);
+    const drive = await this.garageModel.drive(carId);
     if (!drive) {
       cancelAnimationFrame(animationId);
       buttonStart.disabled = false;
@@ -197,7 +228,7 @@ class App {
     const buttonStop = <HTMLButtonElement>document.getElementById(`stop-${carId}`);
     buttonStop.disabled = true;
     cancelAnimationFrame(animationId);
-    const stop = await this.model.stop(carId);
+    const stop = await this.garageModel.stop(carId);
   }
 
   async generateRandomCars(carsCount: number = 100) {
@@ -205,15 +236,14 @@ class App {
       const carName = this.randomCarsNames[Math.floor(Math.random() * 10)];
       const carModel = this.randomCarsModels[Math.floor(Math.random() * 10)];
       const carColor = '#' + Math.floor(Math.random()* 16777215).toString(16);
-      this.model.addCar(carName + ' ' + carModel, carColor);
+      this.garageModel.addCar(carName + ' ' + carModel, carColor);
     };
-
     const cars = await this.getCars();
-    this.view.createCars(cars);
+    this.garageView.createCars(cars);
     this.checkAvailablePagination(this.currentPage, this.countPages);
   }
 
-  async updateCountCars(countCars: string) {
+  updateCountCars(countCars: string) {
     this.countCars = +countCars;
     (document.getElementById('cars-count') as HTMLElement).textContent = countCars;
   }
@@ -223,7 +253,7 @@ class App {
   }
 
   async getCars() {
-    const { cars, countCars } = await this.model.getCars(this.currentPage);
+    const { cars, countCars } = await this.garageModel.getCars(this.currentPage);
     if (countCars) {
       this.updateCountCars(countCars);
       this.updateCountPages();
@@ -231,10 +261,23 @@ class App {
     return cars;
   }
 
-  async updateApp() {
+  async getWinners() {
+    const { winners, countWinners } = await this.winnersModel.getWinners(1);
+    if (countWinners) {
+      this.winnersCount = +countWinners;
+    }
+    return winners;
+  }
+
+  async updateGarage() {
     const cars = await this.getCars();
-    this.view.createCars(cars);
+    this.garageView.createCars(cars);
     this.checkAvailablePagination(this.currentPage, this.countPages);
+  }
+
+  async updateWinners() {
+    const winners = await this.getWinners();
+    this.winnersView.createWinners(winners);
   }
 }
 
