@@ -36,6 +36,11 @@ class WinnersModel {
     return await winner.json();
   }
 
+  async removeWinner(winnerId: string) {
+    const winner = await fetch(`${this.serverUrl}/winners/${winnerId}`, { method: 'DELETE' });
+    return await winner.json();
+  }
+
 }
 
 export default WinnersModel;

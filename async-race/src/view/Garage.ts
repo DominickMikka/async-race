@@ -78,9 +78,9 @@ class Garage {
   createCarElement(car: ICar, carsWrapper: HTMLElement = this.carsWrapper) {
     
     const carTemplate = `
-      <div class='car-wrapper' id='wrapper-${car.id}' data-car-id='${car.id}'>
-        <button class='button-select' id='select-${car.id}'>Select</button> 
-        <button class='button-remove' id='remove-${car.id}'>Remove</button>
+      <div class='car-wrapper' data-car-id='${car.id}'>
+        <button class='button-select'>Select</button> 
+        <button class='button-remove'>Remove</button>
         <button class='button-start' id='start-${car.id}'>Start</button> 
         <button class='button-stop' id='stop-${car.id}' disabled>Stop</button>
         <div class='car-name' id='car-name-${car.id}'>${car.name}</div>

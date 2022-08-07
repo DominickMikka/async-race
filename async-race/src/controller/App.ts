@@ -64,13 +64,16 @@ class App {
             this.selectedCarId = carId;
             this.selectedCarName = car.name;
             this.selectedCarColor = car.color;
-            (document.getElementById('car-update-name') as HTMLInputElement).value = car.name;
-            (document.getElementById('car-update-color') as HTMLInputElement).value = car.color;
+            (<HTMLInputElement>document.getElementById('car-update-name')).value = car.name;
+            (<HTMLInputElement>document.getElementById('car-update-color')).value = car.color;
           };
           if (classElement ===  buttonsClasses.buttonRemove) {
             await this.garageModel.removeCar(carId);
+            await this.winnersModel.removeWinner(carId);
             const element = event.target.closest('.car-wrapper');
-            element?.remove();
+            if (element) {
+              element.remove();
+            }
             this.updateGarage();
           };
           if (classElement === buttonsClasses.buttonStart) {
@@ -85,9 +88,12 @@ class App {
 
     const updateButton = <HTMLButtonElement>document.getElementById('update-car');
     updateButton.addEventListener('click', async () => {
-      const car = await this.garageModel.updateCar(this.selectedCarId, (document.getElementById('car-update-name') as HTMLInputElement).value, (document.getElementById('car-update-color') as HTMLInputElement).value);
-      (document.getElementById(`car-${this.selectedCarId}`) as HTMLElement).setAttribute('fill', (document.getElementById('car-update-color') as HTMLInputElement).value);
-      (document.getElementById(`car-name-${this.selectedCarId}`) as HTMLElement).innerHTML = (document.getElementById('car-update-name') as HTMLInputElement).value;
+      const newCarName = <HTMLInputElement>document.getElementById('car-update-name');
+      const newCarColor = <HTMLInputElement>document.getElementById('car-update-color');
+      await this.garageModel.updateCar(this.selectedCarId, newCarName.value, newCarColor.value);
+      const currentCar = <HTMLElement>document.getElementById(`car-${this.selectedCarId}`);
+      currentCar.setAttribute('fill', newCarColor.value);
+      (document.getElementById(`car-name-${this.selectedCarId}`) as HTMLElement).innerHTML = newCarName.value;
     });
 
     const raceButton = <HTMLButtonElement>document.getElementById('race');
@@ -143,6 +149,8 @@ class App {
       currentPageContent.remove();
       await this.updateWinners();
       this.winnersView.createWinnersPage(this.winnersCount);
+      winnersPage.disabled = true;
+      garagePage.disabled = false;
     });
 
     const garagePage = <HTMLButtonElement>document.getElementById('garage-page');
@@ -150,7 +158,12 @@ class App {
       const currentPageContent = <HTMLElement>document.querySelector('#root');
       currentPageContent.innerHTML = '';
       this.start();
+      //this.garageView.createGarage();
+      winnersPage.disabled = false;
+      garagePage.disabled = true;
     });
+
+    garagePage.disabled = true;
   };
 
   checkAvailablePagination(currentPage: number, countPages: number) {
