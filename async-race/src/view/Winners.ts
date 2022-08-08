@@ -20,7 +20,6 @@ class Winners {
       this.createPageLabel(1)
     );
     this.bodyPage.append(this.winnersWrapper);
-    this.bodyPage.insertAdjacentHTML('beforeend', this.createPagination());
     this.root.append(this.bodyPage);
   }
 
@@ -51,14 +50,6 @@ class Winners {
           </tr>
         </thead>
     `;
-  }
-
-  createPagination() {
-    return `
-      <div class='pagination'>
-        <button id='prev-winners-page' disabled>Prev page</button>
-        <button id='next-winners-page'>Next page</button>
-      </div>`;
   }
 
   createWinners(winners: IWinner[]) {

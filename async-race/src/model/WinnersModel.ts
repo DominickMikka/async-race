@@ -8,7 +8,7 @@ class WinnersModel {
     this.serverUrl = serverUrl;
   }
 
-  async getWinners(page: number, sort: string = 'id') {
+  async getWinners(page: number = 1, sort: string = 'id') {
     const winners = await fetch(`${this.serverUrl}/winners?_page=${page}&_limit=10&_sort=${sort}`);
     const [...winnersElements]: IWinner[] = await winners.json();
     const win = winnersElements.map(async element => {

@@ -158,7 +158,6 @@ class App {
       const currentPageContent = <HTMLElement>document.querySelector('#root');
       currentPageContent.innerHTML = '';
       this.start();
-      //this.garageView.createGarage();
       winnersPage.disabled = false;
       garagePage.disabled = true;
     });
@@ -208,7 +207,6 @@ class App {
 
         if (begin < finish) {
           begin += 10;
-          //begin = Math.ceil(begin + (step * start.velocity)) + 2;
           car.style.transform = `translateX(${begin}px)`;
         } else {
           done = true;
@@ -218,7 +216,7 @@ class App {
           buttonResetRace.disabled = false;
           const buttonRace = <HTMLButtonElement>document.getElementById('race');
           buttonRace.disabled = false;
-          this.winnersModel.addWinner(+carId, 1, +(start.distance / start.velocity / 1000).toFixed(4));
+          await this.winnersModel.addWinner(+carId, 1, +(start.distance / start.velocity / 1000).toFixed(4));
         }
         if (!done) {
           animationId = requestAnimationFrame(animation);
