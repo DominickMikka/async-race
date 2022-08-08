@@ -8,7 +8,8 @@
     "build:dev": "webpack --mode=development",
     "build:prod": "webpack --mode=production --node-env=production",
     "watch": "webpack --watch",
-    "start": "webpack serve --open "
+    "start": "webpack serve --open ",
+    "deploy": "gh-pages -d ./dist -e async-race"
   },
   "author": "",
   "license": "ISC",
